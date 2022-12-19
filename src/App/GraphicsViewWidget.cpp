@@ -64,7 +64,6 @@ void GraphicsViewWidget::paintGL()
 void GraphicsViewWidget::keyPressEvent(QKeyEvent *e)
 {
   QOpenGLWidget::keyPressEvent(e);
-  qDebug() << "Pass here";
   renderer_->keyPressedEvent(e);
   update();
 }

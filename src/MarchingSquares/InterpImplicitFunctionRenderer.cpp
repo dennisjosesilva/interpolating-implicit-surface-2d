@@ -1,7 +1,7 @@
 #include "MarchingSquares/InterpImplicitFunctionRenderer.hpp"
 
 InterpImplicitFunctionRenderer::InterpImplicitFunctionRenderer(
-  QOpenGLFunctions *gl) : gl_{gl}, showConstraints_{false}
+  QOpenGLFunctions *gl) : gl_{gl}, showConstraints_{true}
 {}
 
 void InterpImplicitFunctionRenderer::initShaders()
