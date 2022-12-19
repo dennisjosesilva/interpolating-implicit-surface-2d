@@ -10,6 +10,8 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 
+#include <QKeyEvent>
+
 class InterpImplicitFunctionRenderer
 {
 public:
@@ -18,6 +20,9 @@ public:
   void init(const InterpolatingImplicitFunction2D &interp);
 
   void draw();
+
+  void keyPressedEvent(QKeyEvent *e);
+  void keyReleasedEvent(QKeyEvent *e);
 
 private:
   void initShaders();
@@ -40,4 +45,6 @@ private:
   unsigned int numPosConstraints_;
   unsigned int numNegConstraints_;
   unsigned int numBoundaryConstraints_;
+
+  bool showConstraints_;
 };

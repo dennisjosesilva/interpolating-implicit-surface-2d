@@ -8,7 +8,9 @@
 
 GraphicsViewWidget::GraphicsViewWidget(QWidget *parent)
   : QOpenGLWidget{parent}, renderer_{nullptr}
-{}
+{
+  setFocusPolicy(Qt::FocusPolicy::ClickFocus);
+}
 
 void GraphicsViewWidget::initializeGL()
 {
@@ -48,6 +50,7 @@ void GraphicsViewWidget::initializeGL()
   // interp.optimize();
 
   renderer_->init(interp);
+  setFocus();
 }
 
 void GraphicsViewWidget::paintGL()
@@ -57,3 +60,14 @@ void GraphicsViewWidget::paintGL()
 
   renderer_->draw();
 }
+
+void GraphicsViewWidget::keyPressEvent(QKeyEvent *e)
+{
+  QOpenGLWidget::keyPressEvent(e);
+  qDebug() << "Pass here";
+  renderer_->keyPressedEvent(e);
+  update();
+}
+
+void GraphicsViewWidget::keyReleaseEvent(QKeyEvent *e)
+{}

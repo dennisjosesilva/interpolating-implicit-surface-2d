@@ -1,7 +1,7 @@
 #include "MarchingSquares/InterpImplicitFunctionRenderer.hpp"
 
 InterpImplicitFunctionRenderer::InterpImplicitFunctionRenderer(
-  QOpenGLFunctions *gl) : gl_{gl}
+  QOpenGLFunctions *gl) : gl_{gl}, showConstraints_{false}
 {}
 
 void InterpImplicitFunctionRenderer::initShaders()
@@ -103,22 +103,37 @@ void InterpImplicitFunctionRenderer::draw()
   vaoConstraint_.bind();
   shaderProgram_.bind();
   
-  if (numBoundaryConstraints_ > 0) {
-    shaderProgram_.setUniformValue(uniColor_, QVector3D{1.0f, 1.0f, 1.0f});
-    gl_->glDrawArrays(GL_POINTS, 0, numBoundaryConstraints_);
-  }
+  if (showConstraints_) {
+    if (numBoundaryConstraints_ > 0) {
+      shaderProgram_.setUniformValue(uniColor_, QVector3D{1.0f, 1.0f, 1.0f});
+      gl_->glDrawArrays(GL_POINTS, 0, numBoundaryConstraints_);
+    }
 
-  if (numPosConstraints_ > 0) {
-    shaderProgram_.setUniformValue(uniColor_, QVector3D{0.0f, 0.0f, 1.0f});
-    gl_->glDrawArrays(GL_POINTS, numBoundaryConstraints_, numPosConstraints_);
-  }
+    if (numPosConstraints_ > 0) {
+      shaderProgram_.setUniformValue(uniColor_, QVector3D{0.0f, 0.0f, 1.0f});
+      gl_->glDrawArrays(GL_POINTS, numBoundaryConstraints_, numPosConstraints_);
+    }
 
-  if (numNegConstraints_ > 0) {
-    shaderProgram_.setUniformValue(uniColor_, QVector3D{1.0f, 0.0f, 0.0f});
-    gl_->glDrawArrays(GL_POINTS, 
-      numBoundaryConstraints_+numPosConstraints_, numNegConstraints_);
+    if (numNegConstraints_ > 0) {
+      shaderProgram_.setUniformValue(uniColor_, QVector3D{1.0f, 0.0f, 0.0f});
+      gl_->glDrawArrays(GL_POINTS, 
+        numBoundaryConstraints_+numPosConstraints_, numNegConstraints_);
+    }
   }
 
   shaderProgram_.release();
   vaoConstraint_.release();
 }
+
+void InterpImplicitFunctionRenderer::keyPressedEvent(QKeyEvent *e)
+{
+  switch (e->key())
+  {
+  case Qt::Key_C:
+    showConstraints_ = !showConstraints_;
+    break;
+  }
+}
+
+void InterpImplicitFunctionRenderer::keyReleasedEvent(QKeyEvent *e)
+{}
