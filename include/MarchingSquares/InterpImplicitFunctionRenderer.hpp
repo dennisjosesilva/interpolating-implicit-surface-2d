@@ -13,7 +13,9 @@
 class InterpImplicitFunctionRenderer
 {
 public:
-  InterpImplicitFunctionRenderer(QOpenGLFunctions *gl);
+  InterpImplicitFunctionRenderer(QOpenGLFunctions *gl, float width=1.0f, float height=1.0f);
+
+  void setRendererSize(float width, float height);
 
   void init(const InterpolatingImplicitFunction2D &interp);
 
@@ -23,7 +25,12 @@ private:
   void initShaders();
   void initBuffers(const InterpolatingImplicitFunction2D &interp);
 
+  void updateProjectionMatrix();
+
 private:
+  float width_;
+  float height_;
+
   QOpenGLFunctions *gl_;
 
   QOpenGLVertexArrayObject vaoPolygon_;
@@ -35,6 +42,7 @@ private:
   QOpenGLShaderProgram shaderProgram_;
 
   unsigned int uniColor_;
+  unsigned int uniProjection_;
 
   unsigned int numPolygonVertices_;
   unsigned int numPosConstraints_;

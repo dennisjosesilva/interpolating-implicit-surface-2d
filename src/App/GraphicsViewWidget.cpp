@@ -27,12 +27,22 @@ void GraphicsViewWidget::initializeGL()
   // };
   InterpolatingImplicitFunction2D interp;
 
-  interp.pushBoundaryConstraint(QVector2D{-0.5f,  0.0f});
-  interp.pushBoundaryConstraint(QVector2D{ 0.0f,  0.5f});
-  interp.pushBoundaryConstraint(QVector2D{ 0.5f,  0.0f});
-  interp.pushBoundaryConstraint(QVector2D{ 0.0f, -0.5f});
+  float left = width() / 4.0f;
+  float right = width() * (3.0f/4.0f);
+  float bottom = width() / 4.0f;
+  float top = width() * (3.0f/4.0f);
 
-  interp.pushInteriorConstraint(QVector2D{ 0.0f, 0.0f});
+  float vhalf = height() / 2.0f;
+  float hhalf = width()  / 2.0f;
+
+  interp.pushBoundaryConstraint(QVector2D{ left,  vhalf});
+  interp.pushBoundaryConstraint(QVector2D{ hhalf,  top});
+  interp.pushBoundaryConstraint(QVector2D{ right,  vhalf});
+  interp.pushBoundaryConstraint(QVector2D{ hhalf, bottom});
+
+  interp.pushInteriorConstraint(QVector2D{ hhalf, vhalf});
+
+  qDebug() << width();
 
   // ImplicitFunction f = interp.optimize();
 
@@ -43,7 +53,8 @@ void GraphicsViewWidget::initializeGL()
   // Polygonizer polygonizer{f, {-1.5f, 1.5f}, {1.5f, -1.5f}, 0.25, 0.0f};
   // Polygon polygon = polygonizer.polygonize();
 
-  renderer_ = std::make_unique<InterpImplicitFunctionRenderer>(gl);
+  renderer_ = std::make_unique<InterpImplicitFunctionRenderer>(gl, 
+    static_cast<float>(width()), static_cast<float>(height()));
 
   // interp.optimize();
 

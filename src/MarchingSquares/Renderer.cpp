@@ -1,8 +1,18 @@
 #include "MarchingSquares/Renderer.hpp"
 
-Renderer::Renderer(QOpenGLFunctions *gl, const Polygon &polygon)
-  :gl_{gl}, polygon_{polygon} 
-{}
+Renderer::Renderer(QOpenGLFunctions *gl, 
+  const Polygon &polygon, float width, float height)
+  :gl_{gl}, polygon_{polygon}, 
+   width_{width}, height_{height}
+{
+}
+
+void Renderer::setRendererSize(float width, float height)
+{
+  width_ = width;
+  height_ = height;
+  updateProjectionMatrix();
+}
 
 void Renderer::initShaders()
 {
@@ -11,7 +21,18 @@ void Renderer::initShaders()
     ":/shaders/simple.vs");
   shaderProgram_.addShaderFromSourceFile(QOpenGLShader::Fragment,
     ":/shaders/simple.fs");
+  updateProjectionMatrix();
+
   shaderProgram_.link();
+}
+
+void Renderer::updateProjectionMatrix()
+{
+  shaderProgram_.bind();
+  QMatrix4x4 proj;
+  proj.ortho(0.0f, width_, 0.0f, height_, -1.0f, 1.0f);
+  shaderProgram_.setUniformValue("projection", proj);
+  shaderProgram_.release();
 }
 
 void Renderer::initBuffers()
