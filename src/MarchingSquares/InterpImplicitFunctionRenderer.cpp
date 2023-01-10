@@ -1,7 +1,8 @@
 #include "MarchingSquares/InterpImplicitFunctionRenderer.hpp"
 
 InterpImplicitFunctionRenderer::InterpImplicitFunctionRenderer(
-  QOpenGLFunctions *gl) : gl_{gl}, showConstraints_{true}
+  QOpenGLFunctions *gl, float width, float height) 
+  : gl_{gl}, width_{width}, height_{height}, showConstraints_{true}
 {}
 
 void InterpImplicitFunctionRenderer::initShaders()
@@ -14,6 +15,8 @@ void InterpImplicitFunctionRenderer::initShaders()
   shaderProgram_.link();
 
   uniColor_ = shaderProgram_.uniformLocation("color");
+  uniProjection_ = shaderProgram_.uniformLocation("projection");
+  updateProjectionMatrix();
 }
 
 void InterpImplicitFunctionRenderer::initBuffers(
@@ -23,12 +26,8 @@ void InterpImplicitFunctionRenderer::initBuffers(
 
   ImplicitFunction f = interp.optimize();
   
-  Polygonizer polygonizer {f, {-1.5f, 1.5f}, 
-    {1.5f, -1.5f}, 0.25f, 0.0f};
-  
-// Polygonizer polygonizer{f, {-1.5f, 1.5f}, {1.5f, -1.5f}, 0.25, 0.0f};
-// Polygon polygon = polygonizer.polygonize();
-
+  Polygonizer polygonizer {f, {-10.0f, height_+10.0f}, 
+    {width_+10.0f, -10.0f}, 20.0f, 0.0f};  
   Polygon polygon = polygonizer.polygonize();
 
   numPolygonVertices_ = polygon.vertPos.count();
@@ -50,8 +49,8 @@ void InterpImplicitFunctionRenderer::initBuffers(
   numNegConstraints_ = exteriorConstraint.count();
   numBoundaryConstraints_ = boundaryConstraint.count();
 
-  QVector<QVector2D> constraints = boundaryConstraint 
-    + interiorConsraint + exteriorConstraint;  
+   QVector<QVector2D> allConstraints = boundaryConstraint 
+     + interiorConsraint + exteriorConstraint;  
 
   vaoConstraint_.create();
   vaoConstraint_.bind();
@@ -60,8 +59,8 @@ void InterpImplicitFunctionRenderer::initBuffers(
   coordsConstraintVBO_.setUsagePattern(QOpenGLBuffer::StaticDraw);
   coordsConstraintVBO_.create();
   coordsConstraintVBO_.bind();
-  coordsConstraintVBO_.allocate(constraints.constData(), 
-    constraints.count() * sizeof(QVector2D));
+  coordsConstraintVBO_.allocate(allConstraints.constData(), 
+    allConstraints.count() * sizeof(QVector2D));
   shaderProgram_.setAttributeBuffer(0, GL_FLOAT, 0, 2, 0);
   shaderProgram_.enableAttributeArray(0);
 
@@ -82,6 +81,15 @@ void InterpImplicitFunctionRenderer::initBuffers(
   shaderProgram_.enableAttributeArray(0);
 
   vaoPolygon_.release();
+}
+
+void InterpImplicitFunctionRenderer::updateProjectionMatrix()
+{
+  QMatrix4x4 proj;
+  proj.ortho(0.0f, width_, 0.0f, height_, -1.0f, 1.0f);
+  shaderProgram_.bind();
+  shaderProgram_.setUniformValue(uniProjection_, proj);
+  shaderProgram_.release();
 }
 
 void InterpImplicitFunctionRenderer::init(
