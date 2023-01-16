@@ -6,10 +6,33 @@
 
 #include <QtMath>
 
+#include <QMessageBox>
+
 GraphicsViewWidget::GraphicsViewWidget(QWidget *parent)
   : QOpenGLWidget{parent}, renderer_{nullptr}
 {
   setFocusPolicy(Qt::FocusPolicy::ClickFocus);
+}
+
+void GraphicsViewWidget::loadImage(const QString &filename)
+{
+  if (curImage_.load(filename) && curImage_.allGray()) {
+    // TODO: load image
+
+    // TODO: 
+    // extract a level-set of the image
+    // extract the contours of the level sets
+    // compute boundary and internal points
+    // compute implicit function 
+    curImage_.da
+
+  }
+  else {
+    QMessageBox::warning(this, tr("Wrong image format"), 
+      tr("The image couldn't be loaded or it is a colored image.\n"
+         "Currently, the program accepts only grayscale images."), 
+         QMessageBox::Ok, QMessageBox::Ok);
+  }
 }
 
 void GraphicsViewWidget::initializeGL()

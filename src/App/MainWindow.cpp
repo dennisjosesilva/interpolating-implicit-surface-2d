@@ -22,8 +22,8 @@ MainWindow::MainWindow()
 
   createMenus();
 
-  GraphicsViewWidget *g = new GraphicsViewWidget{this};
-  setCentralWidget(g);
+  gview_ = new GraphicsViewWidget{this};
+  setCentralWidget(gview_);
 }
 
 static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode)
@@ -49,7 +49,6 @@ static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMo
   dialog.setAcceptMode(acceptMode);
 }
 
-
 void MainWindow::createMenus()
 {
   QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
@@ -68,6 +67,6 @@ void MainWindow::openImageAct_onAction()
 
   if (accepted == dialog.selectedFiles().count() > 0) {
     const QString filename = dialog.selectedFiles().constFirst();    
-    qDebug() << filename <<  "chosen to be loaded";
+    gview_->loadImage(filename);
   }
 }

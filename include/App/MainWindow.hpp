@@ -2,6 +2,8 @@
 
 #include <QMainWindow>
 
+class GraphicsViewWidget;
+
 class MainWindow : public QMainWindow
 {
 Q_OBJECT
@@ -12,4 +14,7 @@ protected:
   void createMenus();
 
   void openImageAct_onAction();
+
+protected:
+  GraphicsViewWidget *gview_;
 };
