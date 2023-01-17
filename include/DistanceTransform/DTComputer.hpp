@@ -1,6 +1,6 @@
 #pragma once 
 
-#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_3_Compatibility>
 
 #include <QVector>
 #include <QOpenGLShaderProgram>
@@ -12,7 +12,7 @@
 class DTComputer
 {
 public:
-  DTComputer(QOpenGLFunctions *gl);
+  DTComputer(QOpenGLFunctions_4_3_Compatibility *gl);
   QVector<float> compute(int width, int height, 
     const QVector<bool> &bimg);
 
@@ -40,7 +40,7 @@ private:
 
 
 private:
-  QOpenGLFunctions *gl_;
+  QOpenGLFunctions_4_3_Compatibility *gl_;
 
   // QOpenGLVertexArrayObject vao_;
   // QOpenGLBuffer vbo_;

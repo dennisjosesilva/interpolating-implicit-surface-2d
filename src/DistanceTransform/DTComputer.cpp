@@ -1,9 +1,12 @@
+
+
 #include "DistanceTransform/DTComputer.hpp"
 #include <cmath>
 
 #include <QOpenGLVertexArrayObject>
+#include <QOpenGLFunctions_4_3_Compatibility>
 
-DTComputer::DTComputer(QOpenGLFunctions *gl)
+DTComputer::DTComputer(QOpenGLFunctions_4_3_Compatibility *gl)
   :gl_{gl}
 {  
 }
@@ -70,7 +73,7 @@ bool DTComputer::isBoundary(int width, int height,
 
   for (const QVector2D &offset : neighborhood) {
     QVector2D q = p + offset;
-    if ((0 <= q.x() && q.x() < width && 0 < q.y() && q.y() < height) ||
+    if ((q.x() < 0 || width <= q.x() || q.y() < 0 || height <= q.y()) ||
       !bimg[pixelIndex(width, height, q)])
       return true;
   }
@@ -112,7 +115,7 @@ void DTComputer::genSplatTexture(int width, int height)
   gl_->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   gl_->glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, S, S, 0, GL_RED, GL_FLOAT,
     dt);
-  //gl_->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  gl_->glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }
 
 void DTComputer::setupFramebuffer(int width, int height)
@@ -143,6 +146,9 @@ QVector<float> DTComputer::compute(int width, int height,
   QOpenGLVertexArrayObject vao;
   QOpenGLBuffer vbo;
 
+  vao.create();
+  QOpenGLVertexArrayObject::Binder vaoBinder{&vao};
+
   gl_->glViewport(0, 0, width, height);
   splatDiameter_ = std::min(width, height);
   splatRadius_ = splatDiameter_ / 2;
@@ -157,8 +163,9 @@ QVector<float> DTComputer::compute(int width, int height,
   gl_->glBlendEquation(GL_MIN);
   gl_->glBlendFunc(GL_ONE, GL_ONE);
 
-  QOpenGLVertexArrayObject::Binder vaoBinder{&vao};
+  
   vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  vbo.create();
   vbo.bind();
   vbo.allocate(b.constData(), b.count() * sizeof(QVector2D));
   shader_.setAttributeBuffer(0, GL_FLOAT, 0, 2, 0);

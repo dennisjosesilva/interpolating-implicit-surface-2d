@@ -1,8 +1,9 @@
 #include "App/GraphicsViewWidget.hpp"
 #include "implicit/InterpolatingImplicitFunction2d.hpp"
+#include "DistanceTransform/DistanceTransform.hpp"
 
 #include <QOpenGLContext>
-#include <QOpenGLFunctions_4_1_Core>
+#include <QOpenGLFunctions_4_3_Compatibility>
 
 #include <QtMath>
 
@@ -25,7 +26,27 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     // compute boundary and internal points
     // compute implicit function 
     // curImage_.da
+    QVector<bool> bimg(curImage_.width() * curImage_.height(), false);
+    for (int y = 0; y < curImage_.height(); y++) {
+      for (int x = 0; x < curImage_.width(); x++) {
+        if (qGray(curImage_.pixel(x, y)) <= 10)
+          bimg[y*curImage_.width() + x] = true;
+      }
+    }
 
+    QVector<float> edt = computeDistanceTransform(
+      QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_3_Compatibility>(), 
+      bimg, curImage_.width(), curImage_.height());
+
+    QImage dtImage{curImage_.size(), QImage::Format_Grayscale8};
+    unsigned char *dtImageData = dtImage.bits();
+    for (int pidx = 0; pidx < edt.count(); pidx++) {
+      dtImageData[pidx] = 255 * edt[pidx];
+    }
+
+    curImage_.save("curImage.png");
+    dtImage.save("dt.png");
+    qDebug() << "DONE";
   }
   else {
     QMessageBox::warning(this, tr("Wrong image format"), 
@@ -39,7 +60,15 @@ void GraphicsViewWidget::initializeGL()
 {
   using ImplicitFunction = Polygonizer::ImplicitFunction;
 
+  QSurfaceFormat format;
+  format.setProfile(QSurfaceFormat::CompatibilityProfile);
+  QOpenGLContext::currentContext()->setFormat(format);
+
   initializeOpenGLFunctions();
+
+  // QOpenGLFunctions_4_3_Compatibility *gl = 
+  //   QOpenGLContext::currentContext()
+  //     ->versionFunctions<QOpenGLFunctions_4_3_Compatibility>();
 
   QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
 
