@@ -24,7 +24,7 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     // extract the contours of the level sets
     // compute boundary and internal points
     // compute implicit function 
-    curImage_.da
+    // curImage_.da
 
   }
   else {

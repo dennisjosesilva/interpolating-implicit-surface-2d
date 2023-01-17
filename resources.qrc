@@ -2,5 +2,8 @@
 <qresource>
   <file>shaders/simple.vs</file>
   <file>shaders/simple.fs</file>
+  <file>shaders/DistanceTransform/dt.vs</file>
+  <file>shaders/DistanceTransform/dt.gs</file>
+  <file>shaders/DistanceTransform/dt.fs</file> 
 </qresource>
 </RCC>
