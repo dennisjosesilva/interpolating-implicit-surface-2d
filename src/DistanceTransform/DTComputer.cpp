@@ -148,8 +148,7 @@ QVector<float> DTComputer::compute(int width, int height,
 
   vao.create();
   QOpenGLVertexArrayObject::Binder vaoBinder{&vao};
-
-  gl_->glViewport(0, 0, width, height);
+  
   splatDiameter_ = std::min(width, height);
   splatRadius_ = splatDiameter_ / 2;
 
@@ -158,6 +157,9 @@ QVector<float> DTComputer::compute(int width, int height,
   shader_.bind();
   genSplatTexture(width, height);
   setupFramebuffer(width, height);
+
+  if (gl_->glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+    qDebug() << "Framebuffer completed.";
 
   gl_->glEnable(GL_BLEND);
   gl_->glBlendEquation(GL_MIN);
@@ -184,12 +186,20 @@ QVector<float> DTComputer::compute(int width, int height,
   shader_.setUniformValue("splatTexture", 0);
   gl_->glActiveTexture(GL_TEXTURE0);
 
+  gl_->glViewport(0, 0, width, height);
   gl_->glDrawArrays(GL_POINTS, 0, b.size());
+
+  GLsizei w = width;
+  GLsizei h = height;
+
+  w;
+  h; 
 
   QVector<float> dt(width*height, 0.0f);
   gl_->glReadPixels(0, 0, width, height, GL_RED, GL_FLOAT, 
     &dt[0]);
   
+  // gl_->glBindFramebuffer(GL_FRAMEBUFFER, 0);  // set default framebuffer back.
   gl_->glDeleteFramebuffers(1, &framebuffer_);
   gl_->glDeleteTextures(1, &texFramebuffer_);
   gl_->glDeleteTextures(1, &splatTexture_);

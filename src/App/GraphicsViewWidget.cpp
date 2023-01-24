@@ -38,15 +38,27 @@ void GraphicsViewWidget::loadImage(const QString &filename)
       QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_3_Compatibility>(), 
       bimg, curImage_.width(), curImage_.height());
 
-    QImage dtImage{curImage_.size(), QImage::Format_Grayscale8};
-    unsigned char *dtImageData = dtImage.bits();
-    for (int pidx = 0; pidx < edt.count(); pidx++) {
-      dtImageData[pidx] = 255 * edt[pidx];
+    // The commented lines below is not work altough I expect it should.
+    // QImage dtImage{curImage_.size(), QImage::Format_Grayscale8};
+    // unsigned char *dtImageData = dtImage.bits();
+    
+    // for (int pidx = 0; pidx < edt.count(); pidx++) {
+    //    dtImageData[pidx] = 255 * edt[pidx];
+    // }
+
+    QImage dtImage{ curImage_.size(), QImage::Format_ARGB32};
+    for (int l = 0; l < curImage_.height(); l++) {
+      QRgb *line = reinterpret_cast<QRgb*>(dtImage.scanLine(l));
+      for (int c = 0; c < curImage_.width(); c++) {
+        int greyLevel = edt[curImage_.width() * l + c] * 255;
+        line[c] = qRgba(greyLevel, greyLevel, greyLevel, 255);
+      }
     }
 
     curImage_.save("curImage.png");
     dtImage.save("dt.png");
     qDebug() << "DONE";
+    // update();
   }
   else {
     QMessageBox::warning(this, tr("Wrong image format"), 

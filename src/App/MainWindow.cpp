@@ -69,4 +69,5 @@ void MainWindow::openImageAct_onAction()
     const QString filename = dialog.selectedFiles().constFirst();    
     gview_->loadImage(filename);
   }
+//  gview_->loadImage("../img/leaf2.pgm");
 }
