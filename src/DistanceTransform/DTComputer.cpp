@@ -164,7 +164,6 @@ QVector<float> DTComputer::compute(int width, int height,
   gl_->glEnable(GL_BLEND);
   gl_->glBlendEquation(GL_MIN);
   gl_->glBlendFunc(GL_ONE, GL_ONE);
-
   
   vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
   vbo.create();
@@ -189,17 +188,11 @@ QVector<float> DTComputer::compute(int width, int height,
   gl_->glViewport(0, 0, width, height);
   gl_->glDrawArrays(GL_POINTS, 0, b.size());
 
-  GLsizei w = width;
-  GLsizei h = height;
-
-  w;
-  h; 
-
   QVector<float> dt(width*height, 0.0f);
   gl_->glReadPixels(0, 0, width, height, GL_RED, GL_FLOAT, 
     &dt[0]);
   
-  // gl_->glBindFramebuffer(GL_FRAMEBUFFER, 0);  // set default framebuffer back.
+  gl_->glBindFramebuffer(GL_FRAMEBUFFER, 0);  // set default framebuffer back.
   gl_->glDeleteFramebuffers(1, &framebuffer_);
   gl_->glDeleteTextures(1, &texFramebuffer_);
   gl_->glDeleteTextures(1, &splatTexture_);

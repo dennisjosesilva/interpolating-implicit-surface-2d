@@ -102,6 +102,7 @@ void InterpImplicitFunctionRenderer::init(
 
 void InterpImplicitFunctionRenderer::draw()
 {  
+  qDebug() << "Drawing call!";
   vaoPolygon_.bind();
   shaderProgram_.bind();
   shaderProgram_.setUniformValue(uniColor_, QVector3D{1.0f, 1.0f, 1.0f});

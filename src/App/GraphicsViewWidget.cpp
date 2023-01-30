@@ -58,7 +58,7 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     curImage_.save("curImage.png");
     dtImage.save("dt.png");
     qDebug() << "DONE";
-    // update();
+    update();
   }
   else {
     QMessageBox::warning(this, tr("Wrong image format"), 
@@ -130,8 +130,9 @@ void GraphicsViewWidget::initializeGL()
 
 void GraphicsViewWidget::paintGL()
 {
+  glViewport(0, 0, width(), height());
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   renderer_->draw();
 }
