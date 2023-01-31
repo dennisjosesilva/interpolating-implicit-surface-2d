@@ -41,5 +41,5 @@ private:
 QVector<bool> computeContours(const QSize &size, 
   const QVector<bool> &bimg);
 
-QVector<QVector2D> extractContours(const QSize &size, 
+QVector<QVector2D> extractContourPoints(const QSize &size, 
   const QVector<bool> &bimg);

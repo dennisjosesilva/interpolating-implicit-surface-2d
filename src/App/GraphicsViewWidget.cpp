@@ -23,7 +23,7 @@ void GraphicsViewWidget::loadImage(const QString &filename)
 
     // TODO: 
     // extract a level-set of the image           DONE
-    // extract the contours of the level sets     
+    // extract the contours of the level sets     DONE  
     // compute boundary and internal points       DONE (using medial axis-skeleton)
     // compute implicit function                
     QVector<bool> bimg(curImage_.width() * curImage_.height(), false);
@@ -33,54 +33,40 @@ void GraphicsViewWidget::loadImage(const QString &filename)
           bimg[y*curImage_.width() + x] = true;
       }
     }
+   
+    // QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
+    // QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
 
-    
-    // QVector<bool> skel = computeSkeleton(curImage_.size(), bimg);
-    QVector<bool> contours = computeContours(curImage_.size(), bimg);
-
-    QImage cImg { curImage_.size(), QImage::Format_ARGB32 };
-    for (int l = 0; l < curImage_.height(); l++) {
-      QRgb *line = reinterpret_cast<QRgb*>(cImg.scanLine(l));
-      for (int c = 0; c < curImage_.width(); c++) {
-        int greylevel = 255;
-
-        if (bimg[curImage_.width() * l + c])
-          greylevel = 0;
-
-        if (contours[curImage_.width() * l + c])
-          greylevel = 127;
-        
-        line[c] = qRgba(greylevel, greylevel, greylevel, 255);
-      }
-    }
-
-    // The commented lines below is not work altough I expect it should.
-    // QImage dtImage{curImage_.size(), QImage::Format_Grayscale8};
-    // unsigned char *dtImageData = dtImage.bits();
-    
-    // for (int pidx = 0; pidx < edt.count(); pidx++) {
-    //    dtImageData[pidx] = 255 * edt[pidx];
+    // InterpolatingImplicitFunction2D interp;
+    // for (const QVector2D &s : skel) {
+    //   interp.pushInteriorConstraint(s);
     // }
 
-    // QImage skelImg{ curImage_.size(), QImage::Format_ARGB32};
-    // for (int l = 0; l < curImage_.height(); l++) {
-    //   QRgb *line = reinterpret_cast<QRgb*>(skelImg.scanLine(l));
-    //   for (int c = 0; c < curImage_.width(); c++) {
-    //     int greyLevel = 255;
-
-    //     if (bimg[curImage_.width() * l + c])
-    //       greyLevel = 0;
-        
-    //     if (skel[curImage_.width() * l + c])
-    //       greyLevel = 127;
-        
-    //     line[c] = qRgba(greyLevel, greyLevel, greyLevel, 255);
-    //   }
+    // for (int i = 0; i < contours.size(); i += 10) {
+    //   interp.pushBoundaryConstraint(contours[i]);
     // }
 
-    curImage_.save("curImage.png");
-    cImg.save("contours.png");
-    // skelImg.save("skel.png");
+    // for (const QVector2D &c : contours) {
+    //   interp.pushBoundaryConstraint(c);
+    // }
+
+    float left = width() / 4.0f;
+    float right = width() * (3.0f/4.0f);
+    float bottom = height() / 4.0f;
+    float top = height() * (3.0f/4.0f);
+
+    float vhalf = height() / 2.0f;
+    float hhalf = width()  / 2.0f;
+
+    InterpolatingImplicitFunction2D interp;
+    interp.pushBoundaryConstraint({left, top});
+    interp.pushBoundaryConstraint({right, top});
+    interp.pushBoundaryConstraint({left, bottom});
+    interp.pushBoundaryConstraint({right, bottom});
+
+    interp.pushInteriorConstraint({hhalf, vhalf});
+
+    renderer_->loadVBOs(interp);
     update();
   }
   else {

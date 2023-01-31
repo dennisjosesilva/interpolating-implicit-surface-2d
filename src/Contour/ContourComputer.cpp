@@ -64,7 +64,7 @@ QVector<bool> computeContours(const QSize &size, const QVector<bool> &bimg)
   return ContourComputer{size, bimg}();
 }
 
-QVector<QVector2D> extractContours(const QSize &size, const QVector<bool> &bimg)
+QVector<QVector2D> extractContourPoints(const QSize &size, const QVector<bool> &bimg)
 {
   QVector<QVector2D> contours;
   QVector<bool> c = ContourComputer(size, bimg)();

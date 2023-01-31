@@ -19,7 +19,9 @@ public:
 
   void setRendererSize(float width, float height);
 
+  
   void init(const InterpolatingImplicitFunction2D &interp);
+  void loadVBOs(const InterpolatingImplicitFunction2D &interp);
 
   void draw();
 

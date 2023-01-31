@@ -21,17 +21,55 @@ void InterpImplicitFunctionRenderer::initShaders()
 
 void InterpImplicitFunctionRenderer::initBuffers(
   const InterpolatingImplicitFunction2D &interp)
+{  
+  // Create constraints VAO and VBO
+  vaoConstraint_.create();
+  vaoConstraint_.bind();
+  shaderProgram_.bind();
+  
+  coordsConstraintVBO_.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  coordsConstraintVBO_.create();
+  coordsConstraintVBO_.bind();  
+  shaderProgram_.setAttributeBuffer(0, GL_FLOAT, 0, 2, 0);
+  shaderProgram_.enableAttributeArray(0);
+
+  vaoConstraint_.release();
+  shaderProgram_.release();
+
+  // Create curve (polygon) VAO and VBO
+  vaoPolygon_.create();
+  vaoPolygon_.bind();
+  shaderProgram_.bind();
+
+  coordsPolygonVBO_.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  coordsPolygonVBO_.create();
+  coordsPolygonVBO_.bind();
+  shaderProgram_.setAttributeBuffer(0, GL_FLOAT, 0, 2, 0);
+  shaderProgram_.enableAttributeArray(0);
+
+  vaoPolygon_.release();
+
+  // load vertices into the buffers
+  loadVBOs(interp);
+}
+
+void InterpImplicitFunctionRenderer::loadVBOs(
+  const InterpolatingImplicitFunction2D &interp)
 {
+  // 1. Compute interpolating implicit function
   using ImplicitFunction = Polygonizer::ImplicitFunction;
 
   ImplicitFunction f = interp.optimize();
-  
+
+  // 2. Runs match squares to polygonise "f"
   Polygonizer polygonizer {f, {-10.0f, height_+10.0f}, 
     {width_+10.0f, -10.0f}, 20.0f, 0.0f};  
   Polygon polygon = polygonizer.polygonize();
 
   numPolygonVertices_ = polygon.vertPos.count();
 
+  // 3. Extract different types of constraints 
+  // in different vectors
   QVector<QVector2D> interiorConsraint;
   QVector<QVector2D> exteriorConstraint;
   QVector<QVector2D> boundaryConstraint;
@@ -45,6 +83,7 @@ void InterpImplicitFunctionRenderer::initBuffers(
       boundaryConstraint.append(interp.constraint(i));
   }
 
+  // 3.2 Register number of constrains for each type.
   numPosConstraints_ = interiorConsraint.count();
   numNegConstraints_ = exteriorConstraint.count();
   numBoundaryConstraints_ = boundaryConstraint.count();
@@ -52,36 +91,22 @@ void InterpImplicitFunctionRenderer::initBuffers(
    QVector<QVector2D> allConstraints = boundaryConstraint 
      + interiorConsraint + exteriorConstraint;  
 
-  vaoConstraint_.create();
   vaoConstraint_.bind();
-  shaderProgram_.bind();
-  
-  coordsConstraintVBO_.setUsagePattern(QOpenGLBuffer::StaticDraw);
-  coordsConstraintVBO_.create();
   coordsConstraintVBO_.bind();
   coordsConstraintVBO_.allocate(allConstraints.constData(), 
     allConstraints.count() * sizeof(QVector2D));
-  shaderProgram_.setAttributeBuffer(0, GL_FLOAT, 0, 2, 0);
-  shaderProgram_.enableAttributeArray(0);
-
+  coordsConstraintVBO_.release();
   vaoConstraint_.release();
-  shaderProgram_.release();
-
-  vaoPolygon_.create();
-  vaoPolygon_.bind();
-  shaderProgram_.bind();
 
   const QVector<QVector2D> &coords = polygon.vertPos;
-  coordsPolygonVBO_.setUsagePattern(QOpenGLBuffer::StaticDraw);
-  coordsPolygonVBO_.create();
+  vaoPolygon_.bind();
   coordsPolygonVBO_.bind();
   coordsPolygonVBO_.allocate(coords.constData(), 
     coords.count() * sizeof(QVector2D));
-  shaderProgram_.setAttributeBuffer(0, GL_FLOAT, 0, 2, 0);
-  shaderProgram_.enableAttributeArray(0);
-
+  coordsPolygonVBO_.release();
   vaoPolygon_.release();
 }
+
 
 void InterpImplicitFunctionRenderer::updateProjectionMatrix()
 {
