@@ -3,6 +3,8 @@
 #include "Skeleton/SkeletonComputer.hpp"
 #include "Contour/ContourComputer.hpp"
 
+#include <memory>
+
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_4_3_Compatibility>
 
@@ -34,38 +36,48 @@ void GraphicsViewWidget::loadImage(const QString &filename)
       }
     }
    
-    // QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
-    // QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
+    QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
+    QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
 
-    // InterpolatingImplicitFunction2D interp;
-    // for (const QVector2D &s : skel) {
-    //   interp.pushInteriorConstraint(s);
-    // }
+    float HW = width() / 2.0f;
+    float HH = height() / 2.0f;
 
-    // for (int i = 0; i < contours.size(); i += 10) {
-    //   interp.pushBoundaryConstraint(contours[i]);
-    // }
+    float hw = curImage_.width() / 2.0f;
+    float hh = curImage_.height() / 2.0f;
+
+
+    InterpolatingImplicitFunction2D interp;
+    for (const QVector2D &s : skel) {
+      QVector2D p{ (s.x() - hw) + HW, HH - (s.y() - hh) };
+      interp.pushInteriorConstraint(p);
+    }
+
+    for (int i = 0; i < contours.size(); i += 1) {
+      QVector2D p{ (contours[i].x() - hw) + HW, HH - (contours[i].y() - hh) };
+      interp.pushBoundaryConstraint(p);
+    }
 
     // for (const QVector2D &c : contours) {
     //   interp.pushBoundaryConstraint(c);
     // }
 
-    float left = width() / 4.0f;
-    float right = width() * (3.0f/4.0f);
-    float bottom = height() / 4.0f;
-    float top = height() * (3.0f/4.0f);
+    // float left = width() / 4.0f;
+    // float right = width() * (3.0f/4.0f);
+    // float bottom = height() / 4.0f;
+    // float top = height() * (3.0f/4.0f);
 
-    float vhalf = height() / 2.0f;
-    float hhalf = width()  / 2.0f;
+    // float vhalf = height() / 2.0f;
+    // float hhalf = width()  / 2.0f;
 
-    InterpolatingImplicitFunction2D interp;
-    interp.pushBoundaryConstraint({left, top});
-    interp.pushBoundaryConstraint({right, top});
-    interp.pushBoundaryConstraint({left, bottom});
-    interp.pushBoundaryConstraint({right, bottom});
+    // InterpolatingImplicitFunction2D interp;
+    // interp.pushBoundaryConstraint({left, top});
+    // interp.pushBoundaryConstraint({right, top});
+    // interp.pushBoundaryConstraint({left, bottom});
+    // interp.pushBoundaryConstraint({right, bottom});
 
-    interp.pushInteriorConstraint({hhalf, vhalf});
+    // interp.pushInteriorConstraint({hhalf, vhalf});
 
+    renderer_->setRendererSize(width(), height());
     renderer_->loadVBOs(interp);
     update();
   }

@@ -5,6 +5,14 @@ InterpImplicitFunctionRenderer::InterpImplicitFunctionRenderer(
   : gl_{gl}, width_{width}, height_{height}, showConstraints_{true}
 {}
 
+
+void InterpImplicitFunctionRenderer::setRendererSize(float width, float height)
+{
+  width_ = width;
+  height_ = height;
+  updateProjectionMatrix();
+}
+
 void InterpImplicitFunctionRenderer::initShaders()
 {
   shaderProgram_.create();
@@ -63,7 +71,7 @@ void InterpImplicitFunctionRenderer::loadVBOs(
 
   // 2. Runs match squares to polygonise "f"
   Polygonizer polygonizer {f, {-10.0f, height_+10.0f}, 
-    {width_+10.0f, -10.0f}, 20.0f, 0.0f};  
+    {width_+10.0f, -10.0f}, 5.0f, 0.0f};  
   Polygon polygon = polygonizer.polygonize();
 
   numPolygonVertices_ = polygon.vertPos.count();
