@@ -1,6 +1,7 @@
 #include "App/GraphicsViewWidget.hpp"
 #include "implicit/InterpolatingImplicitFunction2d.hpp"
 #include "Skeleton/SkeletonComputer.hpp"
+#include "Contour/ContourComputer.hpp"
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_4_3_Compatibility>
@@ -21,11 +22,10 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     // TODO: load image
 
     // TODO: 
-    // extract a level-set of the image
-    // extract the contours of the level sets
-    // compute boundary and internal points
-    // compute implicit function 
-    // curImage_.da
+    // extract a level-set of the image           DONE
+    // extract the contours of the level sets     
+    // compute boundary and internal points       DONE (using medial axis-skeleton)
+    // compute implicit function                
     QVector<bool> bimg(curImage_.width() * curImage_.height(), false);
     for (int y = 0; y < curImage_.height(); y++) {
       for (int x = 0; x < curImage_.width(); x++) {
@@ -35,7 +35,24 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     }
 
     
-    QVector<bool> skel = computeSkeleton(curImage_.size(), bimg);
+    // QVector<bool> skel = computeSkeleton(curImage_.size(), bimg);
+    QVector<bool> contours = computeContours(curImage_.size(), bimg);
+
+    QImage cImg { curImage_.size(), QImage::Format_ARGB32 };
+    for (int l = 0; l < curImage_.height(); l++) {
+      QRgb *line = reinterpret_cast<QRgb*>(cImg.scanLine(l));
+      for (int c = 0; c < curImage_.width(); c++) {
+        int greylevel = 255;
+
+        if (bimg[curImage_.width() * l + c])
+          greylevel = 0;
+
+        if (contours[curImage_.width() * l + c])
+          greylevel = 127;
+        
+        line[c] = qRgba(greylevel, greylevel, greylevel, 255);
+      }
+    }
 
     // The commented lines below is not work altough I expect it should.
     // QImage dtImage{curImage_.size(), QImage::Format_Grayscale8};
@@ -45,25 +62,25 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     //    dtImageData[pidx] = 255 * edt[pidx];
     // }
 
-    QImage skelImg{ curImage_.size(), QImage::Format_ARGB32};
-    for (int l = 0; l < curImage_.height(); l++) {
-      QRgb *line = reinterpret_cast<QRgb*>(skelImg.scanLine(l));
-      for (int c = 0; c < curImage_.width(); c++) {
-        int greyLevel = 255;
+    // QImage skelImg{ curImage_.size(), QImage::Format_ARGB32};
+    // for (int l = 0; l < curImage_.height(); l++) {
+    //   QRgb *line = reinterpret_cast<QRgb*>(skelImg.scanLine(l));
+    //   for (int c = 0; c < curImage_.width(); c++) {
+    //     int greyLevel = 255;
 
-        if (bimg[curImage_.width() * l + c])
-          greyLevel = 0;
+    //     if (bimg[curImage_.width() * l + c])
+    //       greyLevel = 0;
         
-        if (skel[curImage_.width() * l + c])
-          greyLevel = 127;
+    //     if (skel[curImage_.width() * l + c])
+    //       greyLevel = 127;
         
-        line[c] = qRgba(greyLevel, greyLevel, greyLevel, 255);
-      }
-    }
+    //     line[c] = qRgba(greyLevel, greyLevel, greyLevel, 255);
+    //   }
+    // }
 
     curImage_.save("curImage.png");
-    skelImg.save("skel.png");
-    qDebug() << "DONE";
+    cImg.save("contours.png");
+    // skelImg.save("skel.png");
     update();
   }
   else {

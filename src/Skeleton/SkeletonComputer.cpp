@@ -343,7 +343,7 @@ QVector<QVector2D> extractSkeletonPoints(const QSize &size, const QVector<bool> 
   QVector<bool> skelTB = SkeletonComputer(size, bimg)(thres, SkeletonComputer::TopToBottom);
   QVector<bool> skelBT = SkeletonComputer(size, bimg)(thres, SkeletonComputer::BottomToTop);
   QVector<QVector2D> skel;
-  int w = static_cast<unsigned int>(size.width());
+  unsigned int w = static_cast<unsigned int>(size.width());
 
   // Compute intersection between skelTB and skelBT and store the skeleton points
   for (unsigned int pidx = 0; pidx < skel.size(); pidx++) {
