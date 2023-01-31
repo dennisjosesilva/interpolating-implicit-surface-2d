@@ -1,6 +1,6 @@
 #include "App/GraphicsViewWidget.hpp"
 #include "implicit/InterpolatingImplicitFunction2d.hpp"
-#include "DistanceTransform/DistanceTransform.hpp"
+#include "Skeleton/SkeletonComputer.hpp"
 
 #include <QOpenGLContext>
 #include <QOpenGLFunctions_4_3_Compatibility>
@@ -34,9 +34,8 @@ void GraphicsViewWidget::loadImage(const QString &filename)
       }
     }
 
-    QVector<float> edt = computeDistanceTransform(
-      QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_3_Compatibility>(), 
-      bimg, curImage_.width(), curImage_.height());
+    
+    QVector<bool> skel = computeSkeleton(curImage_.size(), bimg);
 
     // The commented lines below is not work altough I expect it should.
     // QImage dtImage{curImage_.size(), QImage::Format_Grayscale8};
@@ -46,17 +45,24 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     //    dtImageData[pidx] = 255 * edt[pidx];
     // }
 
-    QImage dtImage{ curImage_.size(), QImage::Format_ARGB32};
+    QImage skelImg{ curImage_.size(), QImage::Format_ARGB32};
     for (int l = 0; l < curImage_.height(); l++) {
-      QRgb *line = reinterpret_cast<QRgb*>(dtImage.scanLine(l));
+      QRgb *line = reinterpret_cast<QRgb*>(skelImg.scanLine(l));
       for (int c = 0; c < curImage_.width(); c++) {
-        int greyLevel = edt[curImage_.width() * l + c] * 255;
+        int greyLevel = 255;
+
+        if (bimg[curImage_.width() * l + c])
+          greyLevel = 0;
+        
+        if (skel[curImage_.width() * l + c])
+          greyLevel = 127;
+        
         line[c] = qRgba(greyLevel, greyLevel, greyLevel, 255);
       }
     }
 
     curImage_.save("curImage.png");
-    dtImage.save("dt.png");
+    skelImg.save("skel.png");
     qDebug() << "DONE";
     update();
   }

@@ -8,6 +8,7 @@
 #include <QVector>
 #include <QPoint>
 #include <QSize>
+#include <QVector2D>
 
 // ==========================================================================================
 // MULTIMAP WRAPPER TO EXPOSE THE NARROW BAND FUNCTIONALITY
@@ -43,8 +44,8 @@ public:
 
   iterator begin() { return map_.begin(); }
   iterator end() { return map_.end(); }
-  const_iterator cbegin() const { return map_.cbegin(); }
-  const_iterator cend() const { return map_.cend(); }
+  const_iterator begin() const { return map_.cbegin(); }
+  const_iterator end() const { return map_.cend(); }
   reverse_iterator rbegin() { return map_.rbegin(); }
   reverse_iterator rend() { return map_.rend(); }
   const_reverse_iterator crbegin() const { return map_.crbegin(); }
@@ -114,3 +115,15 @@ private:
   const static QVector<QPoint> SkelAdj;
   const static unsigned int INVALID_FT;
 };
+
+// ===================================================================================================
+// FUNCTION TO COMPUTE THE SKELETON
+// ===================================================================================================
+QVector<bool> computeSkeleton(const QSize &size, const QVector<bool> &bimg, float thres=10.0f);
+
+
+// Function that extract the skeleton points as the centres of the skeleton pixels computed 
+// by the AFMM method implemeted by SkeletonComputer class. 
+QVector<QVector2D> extractSkeletonPoints(const QSize &size, const QVector<bool> &bimg, 
+  float thres=10.0f);
+

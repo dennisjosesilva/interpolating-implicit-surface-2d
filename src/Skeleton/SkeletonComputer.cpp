@@ -49,7 +49,7 @@ SkeletonComputer::SkeletonComputer(const QSize &size, const QVector<bool> &bimg)
   : bimg_{bimg},
     size_{size},
     DT_(size.height() * size.width()),
-    state_(size.height() / size.width()),
+    state_(size.height() * size.width()),
     FT_(size.height() * size.width()),
     visited_(size.height() * size.width(), false),
     curBoundaryId_{1}
@@ -114,7 +114,7 @@ QVector<bool> SkeletonComputer::compute(float thres, InitVertScanOrder order)
   QVector<bool> skel(size_.width() * size_.height(), false);
   QPoint p;
   for (p.ry() = 0; p.y() < size_.height(); p.ry()++) {
-    for (p.rx() = 0; p.x() < size_.width(); p.ry()++) {
+    for (p.rx() = 0; p.x() < size_.width(); p.rx()++) {
       unsigned int pidx = index(p);
       if (FT_[pidx] != INVALID_FT) {
         for (const QPoint &o : Adj) {
@@ -141,7 +141,7 @@ QPoint SkeletonComputer::point(unsigned int pidx) const
   int minInt = std::numeric_limits<int>::min();
   if (pidx < size_.width()*size_.height()) {
     int w = size_.width();
-    return QPoint { pidx % w, pidx / w};
+    return QPoint { static_cast<int>(pidx) % w, static_cast<int>(pidx) / w};
   }
   else 
     return QPoint{ minInt, minInt };
@@ -218,4 +218,140 @@ NarrowBand SkeletonComputer::initBottomToTop()
   return narrowband;
 }
 
-// TODO: FINISH IT!!!!!
+void SkeletonComputer::computeFeatureTransformBoundary(
+  const NarrowBand &narrowband)
+{
+  using MapElem = NarrowBand::value_type;
+
+  for (const MapElem &e : narrowband) {
+    unsigned int pidx = e.second;
+    if (!visited_[pidx]) 
+      traceBoundary(pidx);
+  }
+}
+
+void SkeletonComputer::traceBoundary(unsigned int pidx)
+{
+  visited_[pidx] = true;
+  QPoint p = point(pidx);
+  from_[curBoundaryId_] = p;
+  FT_[pidx] = curBoundaryId_;
+  curBoundaryId_++;
+
+  bool stop = false;
+
+  while (!stop) {
+    stop = true;
+    for (const QPoint &o : AdjE) {
+      QPoint q = p + o;
+      unsigned int qidx = index(q);
+      if (imgContains(q) && state_[qidx] == Band && !visited_[qidx]) {
+        visited_[qidx] = true;
+        from_[curBoundaryId_] = q;
+        FT_[qidx] = curBoundaryId_;
+        curBoundaryId_++;
+        p = q;
+        stop = false;
+        break;
+      }
+    }
+  }
+}
+
+
+void SkeletonComputer::computeFeatureTransformPoint(unsigned int nidx)
+{
+  int dmin = std::numeric_limits<int>::max();
+  QPoint n = point(nidx);
+  for (const QPoint &o : Adj) {
+    QPoint q = n + o;
+    if (imgContains(q)) {
+      unsigned int qidx = index(q);
+      if (state_[qidx] != Known) continue;
+      QPoint c = from_[FT_[qidx]];
+      unsigned int cidx = index(c);
+      int d = ((c.x() - n.x()) * (c.x() - n.x())) + ((c.y() - n.y()) * (c.y() - n.y()));
+      if (d >= dmin) continue;
+      dmin = d;
+      FT_[nidx] = FT_[cidx];
+    }
+  }
+}
+
+bool SkeletonComputer::boundary(const QPoint &p) const
+{
+  for (const QPoint &o : Adj) {
+    QPoint q = p + o;
+    if (bimg_[index(p)] && (!imgContains(q) || !bimg_[index(q)]))
+      return true;
+  }
+  return false; 
+}
+
+float SkeletonComputer::update(int lr, int i, int j, int tb)
+{
+  QPoint a{lr, j}, b{i, tb}, q{i, j};
+  unsigned int aidx = index(a),
+               bidx = index(b),
+               qidx = index(q);
+  
+  if (state_[aidx] == Known) {
+    if (state_[bidx] == Known) {
+      float D1 = (DT_[aidx] + DT_[bidx] + sqrt(2.0f - pow(DT_[aidx] - DT_[bidx], 2)))
+        / 2.0f;  // Equation (9.38)
+      float D2 = (DT_[aidx] + DT_[bidx] - sqrt(2.0f - pow(DT_[aidx] - DT_[bidx], 2)))
+        / 2.0f;  // Equation (9.39)
+
+      if (D2 > DT_[aidx] && D2 > DT_[bidx])
+        return D2;
+      if (D1 > DT_[aidx] && D1 > DT_[bidx])
+        return D1;
+      return DT_[qidx];
+    }
+    else 
+      return 1.0f + DT_[aidx];  // Equation (9.23)
+  }
+  else {
+    if (state_[bidx] == Known)
+      return 1.0f + DT_[bidx];
+  }
+
+  return DT_[qidx];
+}
+
+// ===========================================================================================================
+// COMPUTE SKELETON FUNCTIONS
+// ===========================================================================================================
+QVector<bool> computeSkeleton(const QSize &size, const QVector<bool> &bimg, float thres) 
+{
+  QVector<bool> skelTB = SkeletonComputer(size, bimg)(thres, SkeletonComputer::TopToBottom);
+  QVector<bool> skelBT = SkeletonComputer(size, bimg)(thres, SkeletonComputer::BottomToTop);
+  QVector<bool> skel(skelTB.size(), false);
+
+  // Compute intersection between skelTB and skelBT
+  for (unsigned int pidx = 0; pidx < skel.size(); pidx++) {
+    if (skelTB[pidx] && skelBT[pidx])
+      skel[pidx] = true;
+  }
+
+  return skel;
+}
+
+QVector<QVector2D> extractSkeletonPoints(const QSize &size, const QVector<bool> &bimg, 
+  float thres)
+{
+  QVector<bool> skelTB = SkeletonComputer(size, bimg)(thres, SkeletonComputer::TopToBottom);
+  QVector<bool> skelBT = SkeletonComputer(size, bimg)(thres, SkeletonComputer::BottomToTop);
+  QVector<QVector2D> skel;
+  int w = static_cast<unsigned int>(size.width());
+
+  // Compute intersection between skelTB and skelBT and store the skeleton points
+  for (unsigned int pidx = 0; pidx < skel.size(); pidx++) {
+    if (skelTB[pidx] && skelBT[pidx]) {
+      QVector2D p { pidx % w + 0.5, pidx / w + 0.5 }; // 0.5 to store the centre of the pixels
+      skel.append(p);
+    }
+  }
+
+  return skel;
+}
