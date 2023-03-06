@@ -1,5 +1,13 @@
 # 2D Interpolating implicit function
 
+## Included 3rd-party source code 
+
+**psimpl**
+
+include/Contour/Simplification/psimpl.h is a 3rd-party library 
+used for countor simplification. Its features is described in this 
+[post](https://www.codeproject.com/Articles/114797/Polyline-Simplification).
+
 ## Build
 
 **Requirements:**  C++ 17 compiler, Qt5, OpenGL, Conan and CMake.   

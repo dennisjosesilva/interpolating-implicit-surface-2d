@@ -28,7 +28,7 @@ QVector<bool> ContourComputer::compute() const
 QPoint ContourComputer::point(unsigned int pidx) const 
 {
   unsigned int w = static_cast<unsigned int>(size_.width());
-  return QPoint{ pidx % w, pidx / w };
+  return QPoint{ static_cast<int>(pidx % w), static_cast<int>(pidx / w) };
 }
 
 unsigned int ContourComputer::index(const QPoint &p) const 

@@ -348,7 +348,9 @@ QVector<QVector2D> extractSkeletonPoints(const QSize &size, const QVector<bool> 
   // Compute intersection between skelTB and skelBT and store the skeleton points
   for (unsigned int pidx = 0; pidx < skelTB.size(); pidx++) {
     if (skelTB[pidx] && skelBT[pidx]) {
-      QVector2D p { pidx % w + 0.5, pidx / w + 0.5 }; // 0.5 to store the centre of the pixels
+      QVector2D p { 
+        static_cast<float>(pidx % w) + 0.5f, 
+        static_cast<float>(pidx / w) + 0.5f }; // 0.5 to store the centre of the pixels
       skel.append(p);
     }
   }
