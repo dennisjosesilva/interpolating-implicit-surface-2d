@@ -27,15 +27,24 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     // extract a level-set of the image           DONE
     // extract the contours of the level sets     DONE  
     // compute boundary and internal points       DONE (using medial axis-skeleton)
-    // compute implicit function                
+    // compute implicit function      
+    
+    int N = 0; // number of foreground pixels      
+    QVector2D centroid{0, 0};
+        
     QVector<bool> bimg(curImage_.width() * curImage_.height(), false);
     for (int y = 0; y < curImage_.height(); y++) {
       for (int x = 0; x < curImage_.width(); x++) {
-        if (qGray(curImage_.pixel(x, y)) <= 10)
+        if (qGray(curImage_.pixel(x, y)) <= 10) {
           bimg[y*curImage_.width() + x] = true;
+          N++;
+          centroid.setX(centroid.x() + x);
+          centroid.setY(centroid.y() + y);
+        }
       }
     }
-   
+    centroid /= N;
+
     QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
     QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
 
@@ -47,12 +56,26 @@ void GraphicsViewWidget::loadImage(const QString &filename)
 
 
     InterpolatingImplicitFunction2D interp;
-    for (const QVector2D &s : skel) {
-      QVector2D p{ (s.x() - hw) + HW, HH - (s.y() - hh) };
-      interp.pushInteriorConstraint(p);
-    }
+    // for (int i = 0; i < skel.count(); i += 25) {
+    //   const QVector2D &s = skel[i];
+    //   QVector2D p{ (s.x() - hw) + HW, HH - (s.y() - hh) };
+    //   interp.pushInteriorConstraint(p);
+    // }
 
-    for (int i = 0; i < contours.size(); i += 1) {
+    // Compute a unique interior constraint.
+    QVector2D ic{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+    float icdist = std::numeric_limits<float>::max();
+    for (const QVector2D& s : skel) {
+      float sdist = centroid.distanceToPoint(s);
+      if (sdist < icdist) {
+        ic = s;
+        icdist = sdist;
+      }
+    }
+    QVector2D convic{ (ic.x() - hw) + HW, HH - (ic.y() - hh) };
+    interp.pushInteriorConstraint(convic);
+
+    for (int i = 0; i < contours.size(); i += 25) {
       QVector2D p{ (contours[i].x() - hw) + HW, HH - (contours[i].y() - hh) };
       interp.pushBoundaryConstraint(p);
     }
