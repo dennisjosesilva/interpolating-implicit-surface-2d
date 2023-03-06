@@ -35,5 +35,12 @@ private:
 
 QVector<float> traceContourFlat(const QVector<bool> &bimg, 
   int width, int height);
+
+QVector<float> traceContourFlat(const QSize &size,
+  const QVector<bool> &bimg);
+
 QVector<QVector2D> traceContourPoint(const QVector<bool> &bimg,
   int width, int height);
+
+QVector<QVector2D> traceContourPoint(const QSize &size,
+  const QVector<bool> &bimg);

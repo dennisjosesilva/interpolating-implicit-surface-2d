@@ -2,6 +2,7 @@
 #include "implicit/InterpolatingImplicitFunction2d.hpp"
 #include "Skeleton/SkeletonComputer.hpp"
 #include "Contour/ContourComputer.hpp"
+#include "Contour/Simplification/simplifier.hpp"
 
 #include <memory>
 
@@ -46,7 +47,8 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     centroid /= N;
 
     QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
-    QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
+    // QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
+    QVector<QVector2D> contours = extractSimplifiedContourPoint(curImage_.size(), bimg, 30);
 
     float HW = width() / 2.0f;
     float HH = height() / 2.0f;
@@ -75,7 +77,7 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     QVector2D convic{ (ic.x() - hw) + HW, HH - (ic.y() - hh) };
     interp.pushInteriorConstraint(convic);
 
-    for (int i = 0; i < contours.size(); i += 25) {
+    for (int i = 0; i < contours.size(); i++) {
       QVector2D p{ (contours[i].x() - hw) + HW, HH - (contours[i].y() - hh) };
       interp.pushBoundaryConstraint(p);
     }

@@ -28,9 +28,9 @@ QVector<QVector2D> ContourTracer::tracePoint()
   QVector<float> fcontour = traceFlat();
   QVector<QVector2D> pcontour(fcontour.count() / 2);
 
-  for (int i = 0; i < fcontour.count(); i+=2) {
-    pcontour[i].setX(fcontour[i]);
-    pcontour[i].setY(fcontour[i+1]);
+  for (int i = 0; i < pcontour.count(); i++) {
+    pcontour[i].setX(fcontour[2*i]);
+    pcontour[i].setY(fcontour[2*i+1]);
   }
 
   return pcontour;
@@ -87,6 +87,12 @@ QVector<float> traceContourFlat(const QVector<bool> &bimg,
   return tracer.traceFlat();
 }
 
+QVector<float> traceContourFlat(const QSize &size, 
+  const QVector<bool> &bimg)
+{
+  return traceContourFlat(bimg, size.width(), size.height());
+}
+
 QVector<QVector2D> traceContourPoint(const QVector<bool> &bimg,
   int width, int height)
 {
@@ -94,4 +100,10 @@ QVector<QVector2D> traceContourPoint(const QVector<bool> &bimg,
     bimg);
   ContourTracer tracer{contourImg, width, height};
   return tracer.tracePoint();
+}
+
+QVector<QVector2D> traceContourPoint(const QSize &size,
+  const QVector<bool> &bimg)
+{
+  return traceContourPoint(bimg, size.width(), size.height());
 }
