@@ -25,6 +25,8 @@ file(GLOB_RECURSE PROJECT_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 # INCLUDE QT MACROS TO HEADER FILES
 qt5_wrap_cpp(PROJECT_SOURCE
+  include/App/MainWidget.hpp
+  include/App/PropertiesPanel.hpp
   include/App/GraphicsViewWidget.hpp
   include/App/MainWindow.hpp)
 

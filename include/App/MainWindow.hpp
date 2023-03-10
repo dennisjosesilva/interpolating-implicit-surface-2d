@@ -2,7 +2,7 @@
 
 #include <QMainWindow>
 
-class GraphicsViewWidget;
+class MainWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -16,5 +16,5 @@ protected:
   void openImageAct_onAction();
 
 protected:
-  GraphicsViewWidget *gview_;
+  MainWidget *mainWidget_;
 };

@@ -61,7 +61,7 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     InterpolatingImplicitFunction2D interp;
     for (int i = 0; i < skel.count(); i += 25) {
       const QVector2D &s = skel[i];
-      QVector2D p{ (s.x() - hw) + HW, HH - (s.y() - hh) };
+      QVector2D p{ s.x(), curImage_.height() - s.y() };
       interp.pushInteriorConstraint(p);
     }
 
@@ -79,7 +79,7 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     // interp.pushInteriorConstraint(convic);
 
     for (int i = 0; i < contours.size(); i++) {
-      QVector2D p{ (contours[i].x() - hw) + HW, HH - (contours[i].y() - hh) };
+      QVector2D p{ contours[i].x(), curImage_.height() - contours[i].y() };
       interp.pushBoundaryConstraint(p);
     }
 
@@ -103,7 +103,10 @@ void GraphicsViewWidget::loadImage(const QString &filename)
 
     // interp.pushInteriorConstraint({hhalf, vhalf});
 
-    renderer_->setRendererSize(width(), height());
+    makeCurrent();
+    qDebug() << width() << " " << height();
+    glViewport(0, 0, curImage_.width(), curImage_.height());
+    renderer_->setRendererSize(curImage_.width(), curImage_.height());
     renderer_->loadVBOs(interp);
     update();
   }
@@ -142,8 +145,8 @@ void GraphicsViewWidget::initializeGL()
 
   float left = width() / 4.0f;
   float right = width() * (3.0f/4.0f);
-  float bottom = width() / 4.0f;
-  float top = width() * (3.0f/4.0f);
+  float bottom = height() / 4.0f;
+  float top = height() * (3.0f/4.0f);
 
   float vhalf = height() / 2.0f;
   float hhalf = width()  / 2.0f;
@@ -155,7 +158,7 @@ void GraphicsViewWidget::initializeGL()
 
   interp.pushInteriorConstraint(QVector2D{ hhalf, vhalf});
 
-  qDebug() << width();
+  qDebug() << width() << " " << height();
 
   // ImplicitFunction f = interp.optimize();
 
@@ -168,7 +171,7 @@ void GraphicsViewWidget::initializeGL()
 
   renderer_ = std::make_unique<InterpImplicitFunctionRenderer>(gl, 
     static_cast<float>(width()), static_cast<float>(height()));
-
+  glViewport(0, 0, width(), height());
   // interp.optimize();
 
   renderer_->init(interp);
@@ -177,7 +180,9 @@ void GraphicsViewWidget::initializeGL()
 
 void GraphicsViewWidget::paintGL()
 {
-  glViewport(0, 0, width(), height());
+    
+    glViewport(0, 0, width(), height());
+
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

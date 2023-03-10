@@ -1,5 +1,5 @@
 #include "App/MainWindow.hpp"
-#include "App/GraphicsViewWidget.hpp"
+#include "App/MainWidget.hpp"
 
 #include <QMenuBar>
 #include <QAction>
@@ -22,8 +22,8 @@ MainWindow::MainWindow()
 
   createMenus();
 
-  gview_ = new GraphicsViewWidget{this};
-  setCentralWidget(gview_);
+  mainWidget_ = new MainWidget{this};
+  setCentralWidget(mainWidget_);
 }
 
 static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMode acceptMode)
@@ -34,7 +34,8 @@ static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMo
     firstDialog = false;
     const QStringList pictureLocations = 
       QStandardPaths::standardLocations(QStandardPaths::PicturesLocation);
-    dialog.setDirectory(pictureLocations.isEmpty() ? QDir::currentPath() : pictureLocations.last());
+   // dialog.setDirectory(pictureLocations.isEmpty() ? QDir::currentPath() : pictureLocations.last());
+    dialog.setDirectory("../img");
   }
 
   QStringList mimeTypeFilters;
@@ -45,7 +46,7 @@ static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMo
     mimeTypeFilters.append(mimeTypeName);
 
   dialog.setMimeTypeFilters(mimeTypeFilters);
-  dialog.selectMimeTypeFilter("image/x-portable-greymap"); // PGM
+  dialog.selectMimeTypeFilter("image/x-portable-graymap"); // PGM
   dialog.setAcceptMode(acceptMode);
 }
 
@@ -67,7 +68,7 @@ void MainWindow::openImageAct_onAction()
 
   if (accepted == dialog.selectedFiles().count() > 0) {
     const QString filename = dialog.selectedFiles().constFirst();    
-    gview_->loadImage(filename);
+    mainWidget_->loadImage(filename);
   }
 //  gview_->loadImage("../img/leaf2.pgm");
 }
