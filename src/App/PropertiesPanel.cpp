@@ -1,4 +1,5 @@
 #include "App/PropertiesPanel.hpp"
+#include "App/GraphicsViewWidget.hpp"
 #include "App/MainWidget.hpp"
 
 #include <QLabel>
@@ -23,6 +24,7 @@ PropertiesPanel::PropertiesPanel(MainWidget *parent)
 
   percentageSpinBox_ = new QDoubleSpinBox{this};
   percentageSpinBox_->setRange(0.0f, 1.0f);
+  percentageSpinBox_->setSingleStep(0.05f);
   percentageSpinBox_->setValue(0.1f);
   percentageSpinBox_->setEnabled(false);
   connect(percentageSpinBox_, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
@@ -34,6 +36,7 @@ PropertiesPanel::PropertiesPanel(MainWidget *parent)
   layout->addItem(percentageLayout);
 
   computeBtn_ = new QPushButton{"compute", this};
+  computeBtn_->setEnabled(false);
   connect(computeBtn_, &QPushButton::clicked, this, 
     &PropertiesPanel::computeBtn_onClick);
   layout->addWidget(computeBtn_);
@@ -45,4 +48,6 @@ void PropertiesPanel::percentageSpinBox_onValueChanged(double val)
 { }
 
 void PropertiesPanel::computeBtn_onClick()
-{ }
+{ 
+  mainWidget_->graphicsView()->updateImplicitSurface();
+}

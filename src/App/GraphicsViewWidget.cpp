@@ -1,4 +1,5 @@
 #include "App/GraphicsViewWidget.hpp"
+#include "App/MainWidget.hpp"
 #include "implicit/InterpolatingImplicitFunction2d.hpp"
 #include "Skeleton/SkeletonComputer.hpp"
 #include "Contour/ContourComputer.hpp"
@@ -13,23 +14,19 @@
 
 #include <QMessageBox>
 
-GraphicsViewWidget::GraphicsViewWidget(QWidget *parent)
-  : QOpenGLWidget{parent}, renderer_{nullptr}
+#include <QDoubleSpinBox>
+
+GraphicsViewWidget::GraphicsViewWidget(MainWidget *parent)
+  : QOpenGLWidget{parent}, 
+    mainWidget_{parent}, 
+    renderer_{nullptr},
+    margin_{50}  // Margin of 50
 {
   setFocusPolicy(Qt::FocusPolicy::ClickFocus);
 }
 
-void GraphicsViewWidget::loadImage(const QString &filename)
+void GraphicsViewWidget::updateImplicitSurface()
 {
-  if (curImage_.load(filename) && curImage_.allGray()) {
-    // TODO: load image
-
-    // TODO: 
-    // extract a level-set of the image           DONE
-    // extract the contours of the level sets     DONE  
-    // compute boundary and internal points       DONE (using medial axis-skeleton)
-    // compute implicit function      
-    
     int N = 0; // number of foreground pixels      
     QVector2D centroid{0, 0};
         
@@ -49,14 +46,13 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
     // QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
     QVector<QVector2D> contours = extractSimplifiedContourPointPercentage(curImage_.size(), 
-      bimg, 0.10f); // take 20% of the number of points
+      bimg, mainWidget_->propertiesPanel()->percentageSpinBox()->value()); // take 20% of the number of points
 
     float HW = width() / 2.0f;
     float HH = height() / 2.0f;
 
     float hw = curImage_.width() / 2.0f;
     float hh = curImage_.height() / 2.0f;
-
 
     InterpolatingImplicitFunction2D interp;
     for (int i = 0; i < skel.count(); i += 25) {
@@ -109,12 +105,30 @@ void GraphicsViewWidget::loadImage(const QString &filename)
     renderer_->setRendererSize(curImage_.width(), curImage_.height());
     renderer_->loadVBOs(interp);
     update();
+}
+
+
+bool GraphicsViewWidget::loadImage(const QString &filename)
+{
+  if (curImage_.load(filename) && curImage_.allGray()) {
+    // TODO: load image
+
+    // TODO: 
+    // extract a level-set of the image           DONE
+    // extract the contours of the level sets     DONE  
+    // compute boundary and internal points       DONE (using medial axis-skeleton)
+    // compute implicit function      
+  
+    updateImplicitSurface();
+    return true;
   }
   else {
     QMessageBox::warning(this, tr("Wrong image format"), 
       tr("The image couldn't be loaded or it is a colored image.\n"
          "Currently, the program accepts only grayscale images."), 
          QMessageBox::Ok, QMessageBox::Ok);
+    
+    return false;
   }
 }
 
@@ -181,7 +195,7 @@ void GraphicsViewWidget::initializeGL()
 void GraphicsViewWidget::paintGL()
 {
     
-    glViewport(0, 0, width(), height());
+  glViewport(0, 0, width(), height());
 
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -192,6 +206,7 @@ void GraphicsViewWidget::paintGL()
 void GraphicsViewWidget::keyPressEvent(QKeyEvent *e)
 {
   QOpenGLWidget::keyPressEvent(e);
+  makeCurrent();
   renderer_->keyPressedEvent(e);
   update();
 }

@@ -29,7 +29,7 @@ void Renderer::initShaders()
 void Renderer::updateProjectionMatrix()
 {
   shaderProgram_.bind();
-  QMatrix4x4 proj;
+  QMatrix4x4 proj;  
   proj.ortho(0.0f, width_, 0.0f, height_, -1.0f, 1.0f);
   shaderProgram_.setUniformValue("projection", proj);
   shaderProgram_.release();

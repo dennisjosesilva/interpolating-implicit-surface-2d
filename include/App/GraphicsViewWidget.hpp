@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QOpenGLWidget>
-
 #include "MarchingSquares/InterpImplicitFunctionRenderer.hpp"
 
 #include <memory>
@@ -10,16 +9,21 @@
 #include <QImage>
 
 
+class MainWidget;
+
 class GraphicsViewWidget : public QOpenGLWidget, QOpenGLFunctions 
 {
 Q_OBJECT
 public:
-  GraphicsViewWidget(QWidget *parent=nullptr);
+  GraphicsViewWidget(MainWidget *parent=nullptr);
   ~GraphicsViewWidget() { }
 
   QSize sizeHint() const override { return QSize{720, 720}; }
+  
+  void updateImplicitSurface();
 
-  void loadImage(const QString &filename);
+
+  bool loadImage(const QString &filename);
 
   void keyPressEvent(QKeyEvent *e) override;
   void keyReleaseEvent(QKeyEvent *e) override;
@@ -29,6 +33,8 @@ protected:
   void paintGL() override;
 
 protected:
+  MainWidget *mainWidget_;
   std::unique_ptr<InterpImplicitFunctionRenderer> renderer_;
   QImage curImage_;
+  int margin_;
 };

@@ -3,6 +3,9 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
+#include <QDoubleSpinBox>
+#include <QPushButton>
+
 MainWidget::MainWidget(QWidget *parent)
   :QWidget{parent}
 {
@@ -19,5 +22,8 @@ MainWidget::MainWidget(QWidget *parent)
 
 void MainWidget::loadImage(const QString &filename)
 {
-  graphicsView_->loadImage(filename);
+  if (graphicsView_->loadImage(filename)) {
+    propertiesPanel_->percentageSpinBox()->setEnabled(true);
+    propertiesPanel_->computeBtn()->setEnabled(true);
+  }
 }

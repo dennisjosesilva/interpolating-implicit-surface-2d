@@ -14,6 +14,9 @@ Q_OBJECT
 public:
   PropertiesPanel(MainWidget *parent=nullptr);
   
+  QDoubleSpinBox *percentageSpinBox() { return percentageSpinBox_; }
+  QPushButton *computeBtn() { return computeBtn_; }
+
   void percentageSpinBox_onValueChanged(double val);
   void computeBtn_onClick();
 

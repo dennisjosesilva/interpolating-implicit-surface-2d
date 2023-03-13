@@ -19,9 +19,11 @@ public:
 
   void setRendererSize(float width, float height);
 
-  
   void init(const InterpolatingImplicitFunction2D &interp);
   void loadVBOs(const InterpolatingImplicitFunction2D &interp);
+
+  void zoomIn();
+  void zoomOut();
 
   void draw();
 
@@ -55,6 +57,8 @@ private:
   unsigned int numPosConstraints_;
   unsigned int numNegConstraints_;
   unsigned int numBoundaryConstraints_;
+
+  float zoom_;
 
   bool showConstraints_;
 };

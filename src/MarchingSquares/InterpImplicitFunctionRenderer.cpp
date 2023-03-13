@@ -2,7 +2,7 @@
 
 InterpImplicitFunctionRenderer::InterpImplicitFunctionRenderer(
   QOpenGLFunctions *gl, float width, float height) 
-  : gl_{gl}, width_{width}, height_{height}, showConstraints_{true}
+  : gl_{gl}, width_{width}, height_{height}, showConstraints_{true}, zoom_{1.0f}
 {}
 
 
@@ -120,6 +120,9 @@ void InterpImplicitFunctionRenderer::updateProjectionMatrix()
 {
   QMatrix4x4 proj;
   proj.ortho(0.0f, width_, 0.0f, height_, -1.0f, 1.0f);
+  float oneMinusZoom = 1.0f - zoom_;
+  proj.translate(width_* oneMinusZoom / 2, height_* oneMinusZoom / 2);
+  proj.scale(zoom_);
   shaderProgram_.bind();
   shaderProgram_.setUniformValue(uniProjection_, proj);
   shaderProgram_.release();
@@ -167,12 +170,38 @@ void InterpImplicitFunctionRenderer::draw()
   vaoConstraint_.release();
 }
 
+void InterpImplicitFunctionRenderer::zoomIn()
+{
+  float portion = 0.10f;
+  if (zoom_ < 10.0f)
+    zoom_ += portion;  // increase zoom in 10%  
+  
+  updateProjectionMatrix();
+}
+
+void InterpImplicitFunctionRenderer::zoomOut()
+{
+  float portion = 0.10f;
+  if (zoom_ > 0.10f)
+    zoom_ -= portion;  // reduce zoom in 10%
+  
+  updateProjectionMatrix();
+}
+
 void InterpImplicitFunctionRenderer::keyPressedEvent(QKeyEvent *e)
 {
   switch (e->key())
   {
   case Qt::Key_C:
     showConstraints_ = !showConstraints_;
+    break;
+  
+  case Qt::Key_Plus:
+    zoomIn();
+    break;
+
+  case Qt::Key_Minus:
+    zoomOut();
     break;
   }
 }
