@@ -29,6 +29,15 @@ public:
   void keyReleaseEvent(QKeyEvent *e) override;
 
 protected:
+  void computeInteriorConstraintSampledSkeletonPoints(
+    const QVector<bool> &bimg,
+    InterpolatingImplicitFunction2D &interp);
+  
+  void computeInteriorConstraintCentralSkeletonPoint(
+    const QVector<bool> &bimg,
+    const QVector2D &centroid,
+    InterpolatingImplicitFunction2D &interp);
+
   void initializeGL() override;  
   void paintGL() override;
 

@@ -3,6 +3,7 @@
 #include "App/MainWidget.hpp"
 
 #include <QLabel>
+#include <QComboBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -35,6 +36,16 @@ PropertiesPanel::PropertiesPanel(MainWidget *parent)
   percentageLayout->addWidget(percentageSpinBox_);
   layout->addItem(percentageLayout);
 
+  QHBoxLayout *interiorConstraintLayout = new QHBoxLayout;
+  interiorConstraintLayout->addWidget(new QLabel{"Interior Constraint: ", this});
+  interiorConstraintComboBox_ = new QComboBox{this};
+  interiorConstraintComboBox_->addItem("Central skeleton point", 
+    static_cast<int>(InteriorConstraint::CentralSkelPoint));
+  interiorConstraintComboBox_->addItem("Sampled skeleton points", 
+    static_cast<int>(InteriorConstraint::SampledSkelPoint));
+  interiorConstraintLayout->addWidget(interiorConstraintComboBox_);
+  layout->addItem(interiorConstraintLayout);
+
   computeBtn_ = new QPushButton{"compute", this};
   computeBtn_->setEnabled(false);
   connect(computeBtn_, &QPushButton::clicked, this, 
@@ -44,8 +55,14 @@ PropertiesPanel::PropertiesPanel(MainWidget *parent)
   setLayout(layout);
 }
 
+InteriorConstraint PropertiesPanel::currentInteriorConstraintComboBox()
+{
+  return static_cast<InteriorConstraint>(
+      interiorConstraintComboBox_->currentData().toInt());
+}
+
 void PropertiesPanel::percentageSpinBox_onValueChanged(double val)
-{ }
+{}
 
 void PropertiesPanel::computeBtn_onClick()
 { 

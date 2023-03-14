@@ -43,7 +43,7 @@ void GraphicsViewWidget::updateImplicitSurface()
     }
     centroid /= N;
 
-    QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
+    
     // QVector<QVector2D> contours = extractContourPoints(curImage_.size(), bimg);
     QVector<QVector2D> contours = extractSimplifiedContourPointPercentage(curImage_.size(), 
       bimg, mainWidget_->propertiesPanel()->percentageSpinBox()->value()); // take 20% of the number of points
@@ -55,49 +55,22 @@ void GraphicsViewWidget::updateImplicitSurface()
     float hh = curImage_.height() / 2.0f;
 
     InterpolatingImplicitFunction2D interp;
-    for (int i = 0; i < skel.count(); i += 25) {
-      const QVector2D &s = skel[i];
-      QVector2D p{ s.x(), curImage_.height() - s.y() };
-      interp.pushInteriorConstraint(p);
-    }
-
-    // Compute a unique interior constraint.
-    // QVector2D ic{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-    // float icdist = std::numeric_limits<float>::max();
-    // for (const QVector2D& s : skel) {
-    //   float sdist = centroid.distanceToPoint(s);
-    //   if (sdist < icdist) {
-    //     ic = s;
-    //     icdist = sdist;
-    //   }
-    // }
-    // QVector2D convic{ (ic.x() - hw) + HW, HH - (ic.y() - hh) };
-    // interp.pushInteriorConstraint(convic);
-
+    
     for (int i = 0; i < contours.size(); i++) {
       QVector2D p{ contours[i].x(), curImage_.height() - contours[i].y() };
       interp.pushBoundaryConstraint(p);
     }
 
-    // for (const QVector2D &c : contours) {
-    //   interp.pushBoundaryConstraint(c);
-    // }
-
-    // float left = width() / 4.0f;
-    // float right = width() * (3.0f/4.0f);
-    // float bottom = height() / 4.0f;
-    // float top = height() * (3.0f/4.0f);
-
-    // float vhalf = height() / 2.0f;
-    // float hhalf = width()  / 2.0f;
-
-    // InterpolatingImplicitFunction2D interp;
-    // interp.pushBoundaryConstraint({left, top});
-    // interp.pushBoundaryConstraint({right, top});
-    // interp.pushBoundaryConstraint({left, bottom});
-    // interp.pushBoundaryConstraint({right, bottom});
-
-    // interp.pushInteriorConstraint({hhalf, vhalf});
+    switch (mainWidget_->propertiesPanel()->currentInteriorConstraintComboBox())
+    {
+    case InteriorConstraint::CentralSkelPoint :
+      computeInteriorConstraintCentralSkeletonPoint(bimg, centroid, interp);
+      break;
+    
+    case InteriorConstraint::SampledSkelPoint:
+      computeInteriorConstraintSampledSkeletonPoints(bimg, interp);
+      break;
+    }
 
     makeCurrent();
     qDebug() << width() << " " << height();
@@ -105,6 +78,40 @@ void GraphicsViewWidget::updateImplicitSurface()
     renderer_->setRendererSize(curImage_.width(), curImage_.height());
     renderer_->loadVBOs(interp);
     update();
+}
+
+void GraphicsViewWidget::computeInteriorConstraintSampledSkeletonPoints(
+  const QVector<bool> &bimg,
+  InterpolatingImplicitFunction2D &interp)
+{
+  QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
+
+  for (int i = 0; i < skel.count(); i += 25) {
+      const QVector2D &s = skel[i];
+      QVector2D p{ s.x(), curImage_.height() - s.y() };
+      interp.pushInteriorConstraint(p);
+  }
+}
+  
+void GraphicsViewWidget::computeInteriorConstraintCentralSkeletonPoint(
+  const QVector<bool> &bimg,
+  const QVector2D &centroid,
+  InterpolatingImplicitFunction2D &interp)
+{
+  QVector<QVector2D> skel = extractSkeletonPoints(curImage_.size(), bimg);
+
+  // Compute a unique interior constraint.
+  QVector2D ic{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+  float icdist = std::numeric_limits<float>::max();
+  for (const QVector2D& s : skel) {
+  float sdist = centroid.distanceToPoint(s);
+    if (sdist < icdist) {
+      ic = s;
+      icdist = sdist;
+    }
+  }
+  QVector2D convic{ ic.x(), curImage_.height() - ic.y() };
+  interp.pushInteriorConstraint(convic);
 }
 
 
