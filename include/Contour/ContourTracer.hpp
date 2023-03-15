@@ -12,11 +12,24 @@ public:
   QVector<QVector2D> tracePoint();
 
 private:
+  // ============================================================
+  // AUX PRIVATE STRUCT
+  // ============================================================
+  struct PointDir 
+  {
+    QPoint p;
+    int dir;
+  };
+
   // =============================================================
   // AUX PRIVATE METHODS
   // =============================================================
   QVector<float> traceContour(const QPoint &p);
-  
+  PointDir findNextPoint(const QPoint &curPoint, int dir) const;
+
+  bool background(const QPoint &p) const { return !foreground(p); }
+  bool foreground(const QPoint &p) const;
+
   bool imgContains(const QPoint &p) const;
   int index(const QPoint &p) const;
   QPoint point(int idx) const;
@@ -28,7 +41,6 @@ private:
   int width_;
   int height_;
   const QVector<bool> &contourImg_;
-  QVector<bool> visited_;
 
   static const QVector<QPoint> Dir;
 };

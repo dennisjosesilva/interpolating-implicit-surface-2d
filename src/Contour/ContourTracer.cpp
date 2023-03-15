@@ -10,8 +10,6 @@ ContourTracer::ContourTracer(const QVector<bool> &contourImg, int width, int hei
 
 QVector<float> ContourTracer::traceFlat()
 {
-  visited_ = QVector<bool>(contourImg_.count(), false);
-
   QPoint p;
   for (p.ry() = 0; p.y() < height_; p.ry()++) {
     for (p.rx() = 0; p.x() < width_; p.rx()++) {
@@ -39,28 +37,53 @@ QVector<QVector2D> ContourTracer::tracePoint()
 QVector<float> ContourTracer::traceContour(const QPoint &p)
 {
   QVector<float> trace;
-  visited_[index(p)] = true;
+  PointDir next = findNextPoint(p, 0);
+  trace.append(static_cast<float>(next.p.x()) + 0.5f);
+  trace.append(static_cast<float>(next.p.y()) + 0.5f);
 
-  QPoint cp = p;
-  bool stop = false;
-  while (!stop) {
-    stop = true;
-    trace.append(static_cast<float>(cp.x()) + 0.5f);
-    trace.append(static_cast<float>(cp.y()) + 0.5f);
-    int cpidx = index(cp);
-    visited_[cpidx] = true;
+  QPoint start = p;
+  QPoint end = next.p;
 
-    for (const QPoint &o : Dir) {
-      QPoint q = cp + o;
-      int qidx = index(q);
-      if (imgContains(q) && contourImg_[qidx] && !visited_[qidx]) {
-        stop = false;
-        cp = q;
-        break;
-      }
+  QPoint prev = p;
+  QPoint cur = next.p;
+  bool done = (prev == cur);
+
+  while (!done) {
+    int dsearch = (next.dir + 6) % 8;
+    next = findNextPoint(cur, dsearch);
+    prev = cur;
+    cur = next.p;
+    done = (prev == start && cur == end);
+    if (!done) {
+      trace.append(static_cast<float>(cur.x()) + 0.5f);
+      trace.append(static_cast<float>(cur.y()) + 0.5f);
     }
   }
+
   return trace;
+}
+
+ContourTracer::PointDir 
+ContourTracer::findNextPoint(const QPoint &curPoint, int dir) const
+{
+  for (int i = 0; i < 7; i++) {
+    QPoint q = curPoint + Dir[dir];
+    if (background(q))
+      dir = (dir + 1) % 8;
+    else 
+      return {q, dir};
+  }
+  return {curPoint, dir};
+}
+
+
+bool ContourTracer::foreground(const QPoint &p) const
+{
+  if (imgContains(p)) {
+    return contourImg_[index(p)];
+  }
+
+  return false;
 }
 
 bool ContourTracer::imgContains(const QPoint &p) const
