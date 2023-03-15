@@ -70,6 +70,10 @@ void GraphicsViewWidget::updateImplicitSurface()
     case InteriorConstraint::SampledSkelPoint:
       computeInteriorConstraintSampledSkeletonPoints(bimg, interp);
       break;
+
+    case InteriorConstraint::Normal:
+      computeInteriorConstraintUsingNormals(contours, interp);
+      break;
     }
 
     makeCurrent();
@@ -114,6 +118,93 @@ void GraphicsViewWidget::computeInteriorConstraintCentralSkeletonPoint(
   interp.pushInteriorConstraint(convic);
 }
 
+void GraphicsViewWidget::computeInteriorConstraintUsingNormals(
+    const QVector<QVector2D> &contour,
+    InterpolatingImplicitFunction2D &interp)
+{
+  // compute starting point constraint
+  QVector2D n = computeNormalStartPoint(contour);  
+  const QVector2D &s = contour[0];
+  float offset = 5.0f;
+  QVector2D c = offsetNormal(s, n, 1.0f);
+  interp.pushInteriorConstraint({c.x(), curImage_.height() - c.y()});
+
+  // compute constraint on middle points
+  for (int i = 1; i < contour.count()-2; i++) {
+    const QVector2D &p = contour[i];
+    n = computeNormal(i, contour);
+    c = offsetNormal(p, n, offset);
+    interp.pushInteriorConstraint({c.x(), curImage_.height() - c.y()});
+  }
+
+  // compute contraint on the end point
+  n = computeNormalEndPoint(contour);
+  const QVector2D &e = contour[contour.count()-1];
+  c = offsetNormal(e, n, offset);
+  interp.pushInteriorConstraint({c.x(), curImage_.height() - c.y()});
+}
+
+// https://en.wikipedia.org/wiki/Determinant
+float GraphicsViewWidget::determinant(const QVector2D &v0, 
+  const QVector2D &v1) const
+{
+  return (v0.x() * v1.y()) - (v0.y() * v1.x());
+}
+
+QVector2D GraphicsViewWidget::rotate(const QVector2D &v, 
+  float angle) const
+{
+  float s = sinf(angle);
+  float c = cosf(angle);
+  return QVector2D{c*v.x() -s*v.y(), s*v.x() + c*v.y()};
+}
+
+QVector2D GraphicsViewWidget::offsetNormal(const QVector2D &p, 
+  const QVector2D &n, float offset)
+{
+  // n must be a unit vector
+  return p + (n*offset);
+}
+
+QVector2D GraphicsViewWidget::computeNormal(int pidx, 
+  const QVector<QVector2D> &contour)
+{
+  return computeNormalFromPoints(contour[pidx-1], contour[pidx], contour[pidx+1]);
+}
+
+QVector2D GraphicsViewWidget::computeNormalStartPoint(
+  const QVector<QVector2D> &contour)
+{
+  const unsigned int N = contour.count();
+  return computeNormalFromPoints(contour[N-1], contour[0], contour[1]);
+}
+
+QVector2D GraphicsViewWidget::computeNormalEndPoint(
+  const QVector<QVector2D> &contour)
+{
+  const unsigned int N = contour.count();
+  return computeNormalFromPoints(contour[N-2], contour[N-1], contour[0]);
+}
+
+QVector2D GraphicsViewWidget::computeNormalFromPoints(
+  const QVector2D &p0, const QVector2D &p1, const QVector2D &p2)
+{
+  // compute vectors
+  QVector2D v0 = (p0 - p1).normalized();
+  QVector2D v1 = (p2 - p1).normalized();
+
+  // check if the normal should be inverted
+  bool shouldInvertNormal = determinant(v0, v1) < 0;
+
+  // compute alpha_i (from the lecture)
+  float alpha = acosf(QVector2D::dotProduct(v0, v1));
+
+  // compute normal using alpha_i
+  // if (shouldInvertNormal)
+  //   return -rotate(v0, alpha / 2.0f).normalized();
+  // else
+    return -rotate(v0, alpha / 2.0f).normalized();
+}
 
 bool GraphicsViewWidget::loadImage(const QString &filename)
 {

@@ -43,6 +43,8 @@ PropertiesPanel::PropertiesPanel(MainWidget *parent)
     static_cast<int>(InteriorConstraint::CentralSkelPoint));
   interiorConstraintComboBox_->addItem("Sampled skeleton points", 
     static_cast<int>(InteriorConstraint::SampledSkelPoint));
+  interiorConstraintComboBox_->addItem("Normal", 
+    static_cast<int>(InteriorConstraint::Normal));
   interiorConstraintLayout->addWidget(interiorConstraintComboBox_);
   layout->addItem(interiorConstraintLayout);
 

@@ -10,7 +10,8 @@ class QComboBox;
 
 enum InteriorConstraint {
   CentralSkelPoint = 0,
-  SampledSkelPoint = 1
+  SampledSkelPoint = 1,
+  Normal
 };
 
 class PropertiesPanel : public QWidget 
